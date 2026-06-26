@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import typer
 from dotenv import load_dotenv
 from rich.console import Console
@@ -9,6 +11,7 @@ from rich.panel import Panel
 from rich.syntax import Syntax
 
 from contract_xray.etherscan import EtherscanClientError, fetch_contract_source
+from contract_xray.report import build_report, export_json_report, render_terminal_report
 from contract_xray.rules import ALL_RULES
 from contract_xray.slither_wrapper import SlitherAnalysisError, analyze_source
 
@@ -22,6 +25,7 @@ console = Console()
 def scan(
     address: str = typer.Argument(..., help="Contract address to analyze."),
     chain: str = typer.Option("ethereum", "--chain", "-c", help="Chain to query (ethereum, bsc, polygon)."),
+    json_path: Path | None = typer.Option(None, "--json", help="Path to export the report as JSON."),
 ) -> None:
     """Fetch a contract's verified source code and display its metadata."""
     try:
@@ -52,19 +56,12 @@ def scan(
     console.print(Panel(f"[bold]Contracts found:[/bold] {contract_names}", title="Slither Analysis"))
 
     findings = [finding for rule in ALL_RULES for finding in rule.evaluate(slither)]
-    if not findings:
-        console.print("[bold green]No red flags detected by the current rule set.[/bold green]")
-        return
+    report = build_report(contract, findings)
+    render_terminal_report(report, console)
 
-    for finding in findings:
-        console.print(
-            Panel(
-                f"[bold]Severity:[/bold] {finding.severity.value.upper()}\n"
-                f"[bold]Contract:[/bold] {finding.contract_name}\n"
-                f"{finding.description}",
-                title=f"[bold red]{finding.title}[/bold red]",
-            )
-        )
+    if json_path is not None:
+        export_json_report(report, json_path)
+        console.print(f"[bold]Report exported to:[/bold] {json_path}")
 
 
 if __name__ == "__main__":
