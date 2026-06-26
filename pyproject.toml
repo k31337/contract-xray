@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "contract-xray"
+version = "0.1.0"
+description = "Static analysis tool that scans Solidity smart contracts for common scam and honeypot patterns and generates a red-flag report."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [
+    { name = "k31337" }
+]
+keywords = ["solidity", "smart-contracts", "security", "static-analysis", "slither", "honeypot", "scam-detection"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Security",
+]
+dependencies = [
+    "typer>=0.12",
+    "rich>=13.7",
+    "requests>=2.31",
+    "slither-analyzer>=0.10",
+    "python-dotenv>=1.0",
+]
+
+[project.urls]
+Repository = "https://github.com/k31337/contract-xray"
+
+[project.scripts]
+contract-xray = "contract_xray.cli:app"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-mock>=3.14",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/contract_xray"]
