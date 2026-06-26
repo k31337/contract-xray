@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from slither import Slither
+from typing import TYPE_CHECKING
 
 from contract_xray.rules.base import Finding, Rule, Severity
+
+if TYPE_CHECKING:
+    from slither import Slither
 
 BLACKLIST_NAME_FRAGMENTS = ("blacklist", "blocked", "isblocked", "isexcluded", "isbanned")
 

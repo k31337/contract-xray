@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from slither import Slither
+from typing import TYPE_CHECKING
 
 from contract_xray.rules.base import Finding, Rule, Severity
+
+if TYPE_CHECKING:
+    from slither import Slither
 
 MINT_FUNCTION_FRAGMENTS = ("mint",)
 ACCESS_CONTROL_MODIFIER_FRAGMENTS = ("onlyowner", "onlyrole", "onlyminter", "onlyadmin", "onlygovernance")

@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
-from slither import Slither
+from typing import TYPE_CHECKING
 
 from contract_xray.rules.base import Finding, Rule, Severity
 
+if TYPE_CHECKING:
+    from slither import Slither
+
 TAX_VARIABLE_FRAGMENTS = ("selltax", "sellfee", "taxfee", "feepercent", "taxpercent")
 MAX_REASONABLE_TAX_PERCENT = 25
-SETTER_FRAGMENTS = ("settax", "setfee", "updatetax", "updatefee")
+SETTER_PREFIX_FRAGMENTS = ("set", "update")
+SETTER_TARGET_FRAGMENTS = ("tax", "fee")
 
 
 class ExcessiveSellTaxRule(Rule):
@@ -46,7 +50,7 @@ class ExcessiveSellTaxRule(Rule):
             tax_setters = [
                 function
                 for function in contract.functions
-                if function.name and any(fragment in function.name.lower() for fragment in SETTER_FRAGMENTS)
+                if function.name and self._is_tax_setter(function.name)
             ]
 
             if not high_constant_taxes and not tax_setters:
@@ -79,6 +83,13 @@ class ExcessiveSellTaxRule(Rule):
     def _matches_tax_name(name: str) -> bool:
         lowered = name.lower()
         return any(fragment in lowered for fragment in TAX_VARIABLE_FRAGMENTS)
+
+    @staticmethod
+    def _is_tax_setter(name: str) -> bool:
+        lowered = name.lower()
+        has_prefix = any(lowered.startswith(prefix) for prefix in SETTER_PREFIX_FRAGMENTS)
+        has_target = any(fragment in lowered for fragment in SETTER_TARGET_FRAGMENTS)
+        return has_prefix and has_target
 
     @staticmethod
     def _exceeds_threshold(expression: str) -> bool:
