@@ -9,6 +9,7 @@ from rich.panel import Panel
 from rich.syntax import Syntax
 
 from contract_xray.etherscan import EtherscanClientError, fetch_contract_source
+from contract_xray.rules import ALL_RULES
 from contract_xray.slither_wrapper import SlitherAnalysisError, analyze_source
 
 load_dotenv()
@@ -49,6 +50,21 @@ def scan(
 
     contract_names = ", ".join(c.name for c in slither.contracts)
     console.print(Panel(f"[bold]Contracts found:[/bold] {contract_names}", title="Slither Analysis"))
+
+    findings = [finding for rule in ALL_RULES for finding in rule.evaluate(slither)]
+    if not findings:
+        console.print("[bold green]No red flags detected by the current rule set.[/bold green]")
+        return
+
+    for finding in findings:
+        console.print(
+            Panel(
+                f"[bold]Severity:[/bold] {finding.severity.value.upper()}\n"
+                f"[bold]Contract:[/bold] {finding.contract_name}\n"
+                f"{finding.description}",
+                title=f"[bold red]{finding.title}[/bold red]",
+            )
+        )
 
 
 if __name__ == "__main__":
